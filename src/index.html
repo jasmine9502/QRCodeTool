@@ -1,0 +1,149 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>生成二维码</title>
+    <style>
+        .top{
+            margin: 30px 20px;
+        }
+        .codeContainer {
+            margin: 30px 20px;
+        }
+
+    </style>
+    <script src="js/jquery.js"></script>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery.qrcode.min.js"></script>
+
+
+    <script type="text/javascript">
+        var filedata = [];
+        var code = [];
+        var info = [];
+        function csv(obj) {
+            photoExt=obj.value.substr(obj.value.lastIndexOf(".")).toLowerCase();//获得文件后缀名
+            if(photoExt!='.csv'){
+                 alert("请上传后缀名为csv的文件!");
+            return false;
+            }
+            $("input[name=csvfile]").csv2arr();
+        }
+
+        $.fn.csv2arr = function () {
+            var files = $(this)[0].files;
+            if (typeof (FileReader) !== 'undefined') {    //H5
+                var reader = new FileReader();
+                reader.readAsText(files[0]);            //以文本格式读取
+                reader.onload = function (evt) {
+                    var data = evt.target.result;        //读到的数据
+                    console.log(data);
+                    var arr = data.split(/[\n,]/g);
+                    console.log(arr);
+                    code =[];
+                    info =[];
+                    for (var i=0;i<arr.length;i++) {
+                        if(i%2==0) {
+                            code.push(arr[i]);
+                        } else {
+                            info.push(arr[i]);
+                        }
+                    }
+                    console.log(code);
+                    console.log(info);
+                }
+            } else {
+                alert("IE9及以下浏览器不支持，请使用Chrome或Firefox浏览器");
+            }
+        }
+        function createView() {
+            console.log(document.getElementsByTagName("input")[0].value);
+            var checkNode = document.getElementById("codeContainer");
+            checkNode.innerHTML = "<div id=\"container01\"><div id=\"qrcode01\"></div><p></p></div>";
+            for (var i = 0; i < code.length; i++) {
+                var container = "container0" + (i + 1);
+                var qrcode = "qrcode0" + (i + 1);
+                if (i >= 1) {
+                    var showID = "container0" + i;
+                    var showRID = "container0" + (i + 1);
+                    var codeDivID = "qrcode0" + (i + 1);
+                    var container = document.getElementById(showID);
+                    var node = container.nextSibling;
+                    var oDiv = document.createElement('div');
+                    oDiv.id = showRID;
+                    oDiv.innerHTML = "<div id= " + codeDivID + "></div><p></p>";
+                    container.parentNode.insertBefore(oDiv, node)
+                    node = oDiv.nextSibling;
+                }
+            }
+        }
+
+        function createQRcode() {
+            createView();
+            var size;
+            var level;
+            if (document.getElementsByTagName("select")[0].value == '1') {
+                size = 100;
+            } else if (document.getElementsByTagName("select")[0].value == '2') {
+                size = 175;
+            } else if (document.getElementsByTagName("select")[0].value == '3') {
+                size = 256;
+            }
+
+            if (document.getElementsByTagName("select")[1].value == '1') {
+                level = 0;
+            } else if (document.getElementsByTagName("select")[1].value == '2') {
+                level = 5;
+            } else if (document.getElementsByTagName("select")[1].value == '3') {
+                level = 7;
+            }
+
+            if (document.getElementsByTagName("input")[0].value) {
+                for (var i = 0; i < code.length; i++) {
+                    var codeID = "qrcode0" + (i + 1);
+                    jQuery('#' + codeID).qrcode({
+                        render: "canvas", //也可以替换为table
+                        width: size,
+                        height: size,
+                        text: code[i],
+                        errorCorrectionLevel: 2,
+                        typeNumber:level
+                    });
+                    
+                    document.getElementsByTagName("p")[i].innerHTML = info[i];
+                }
+            } else {
+                alert("请选中csv文件");
+                return;
+            }
+        }
+
+    </script>
+</head>
+
+<body>
+    <div class="top">
+        <input type="file" name="csvfile" onchange="csv(this)" />
+        <span>选择大小：</span>
+        <select>
+            <option value="1">100*100</option>
+            <option value="2">175*175</option>
+            <option value="3">256*256</option>
+        </select>
+        <span>选择复杂度：</span>
+        <select>
+            <option value="1">正常</option>
+            <option value="2">较复杂</option>
+            <option value="3">最复杂</option>
+        </select>
+        <button class="createBtn" onclick=createQRcode()>生成二维码</button>
+    </div>
+    <div id="codeContainer" class="codeContainer">
+        <div id="container01">
+            <div id="qrcode01"></div>
+            <p></p>
+        </div>
+    </div>
+</body>
+
+</html>
