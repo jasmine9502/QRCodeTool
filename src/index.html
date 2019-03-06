@@ -15,17 +15,19 @@
     <script src="js/jquery.js"></script>
     <script src="js/jquery.min.js"></script>
     <script src="js/qrcode.min.js"></script>
-
-
+    <script src="js/jszip.min.js"></script>
+    <script src="js/FileSaver.min.js"></script>
+ 
     <script type="text/javascript">
         var filedata = [];
         var code = [];
         var info = [];
+        var size;
         function csv(obj) {
-            photoExt=obj.value.substr(obj.value.lastIndexOf(".")).toLowerCase();//获得文件后缀名
-            if(photoExt!='.csv'){
-                 alert("请上传后缀名为csv的文件!");
-            return false;
+            photoExt = obj.value.substr(obj.value.lastIndexOf(".")).toLowerCase();//获得文件后缀名
+            if (photoExt != '.csv') {
+                alert("请上传后缀名为csv的文件!");
+                return false;
             }
             $("input[name=csvfile]").csv2arr();
         }
@@ -40,10 +42,10 @@
                     console.log(data);
                     var arr = data.split(/[\n,]/g);
                     console.log(arr);
-                    code =[];
-                    info =[];
-                    for (var i=0;i<arr.length;i++) {
-                        if(i%2==0) {
+                    code = [];
+                    info = [];
+                    for (var i = 0; i < arr.length; i++) {
+                        if (i % 2 == 0) {
                             code.push(arr[i]);
                         } else {
                             info.push(arr[i]);
@@ -53,9 +55,10 @@
                     console.log(info);
                 }
             } else {
-                alert("IE9及以下浏览器不支持，请使用Chrome或Firefox浏览器");
+                alert("页面故障");
             }
         }
+
         function createView() {
             console.log(document.getElementsByTagName("input")[0].value);
             var checkNode = document.getElementById("codeContainer");
@@ -80,8 +83,6 @@
 
         function createQRcode() {
             createView();
-            
-            var size;
             var level;
             if (document.getElementsByTagName("select")[0].value == '1') {
                 size = 150;
@@ -90,21 +91,20 @@
             } else if (document.getElementsByTagName("select")[0].value == '3') {
                 size = 250;
             }
-
             if (document.getElementsByTagName("select")[1].value == '1') {
                 level = QRCode.CorrectLevel.L;
             } else if (document.getElementsByTagName("select")[1].value == '2') {
                 level = QRCode.CorrectLevel.M;
-            } 
+            }
 
             if (document.getElementsByTagName("input")[0].value) {
                 for (var i = 0; i < info.length; i++) {
                     var codeID = "qrcode0" + (i + 1);
                     var qrcode = new QRCode(document.getElementById(codeID), {
-	                text: code[i],
-	                width: size,
-	                height: size,
-                    correctLevel : level,
+                        text: code[i],
+                        width: size,
+                        height: size,
+                        correctLevel: level,
                     });
                     document.getElementsByTagName("p")[i].innerHTML = info[i];
                 }
@@ -112,6 +112,34 @@
                 alert("请选中csv文件");
                 return;
             }
+        }
+        function download() {
+            var imgName =[];
+            var zip = new JSZip();//*****创建实例，zip是对象实例
+            var file_name = 'QRCode.zip';
+            var len = function (arr) {
+                var l = 0;
+                for (var key in arr) {
+                    l++;
+                }
+                return l;
+            }
+            for (let i = 0; i < info.length; i++) {
+                //处理base64数据
+                var img_arr = document.getElementsByTagName("img")[i].src.split(',');
+                console.log(img_arr);
+                imgName[i] = info[i]+ '.jpg';
+                console.log(imgName);
+                zip.file(imgName[i], img_arr[1], { base64: true });//根据base64数据在压缩包中生成jpg数据
+            }
+            var ziplength = len(zip.files);
+                if (ziplength == info.length) {//当所有图片都已经生成打包并保存zip
+                    zip.generateAsync({ type: "blob" })
+                        .then(function (content) {
+                            console.log(content);
+                            saveAs(content, file_name);
+                        });
+                }
         }
 
     </script>
@@ -132,6 +160,7 @@
             <option value="2">复杂</option>
         </select>
         <button class="createBtn" onclick=createQRcode()>生成二维码</button>
+        <button class="createBtn" onclick=download()>下载二维码到本地</button>
     </div>
     <div id="codeContainer" class="codeContainer">
         <div id="container01">
@@ -139,6 +168,7 @@
             <p></p>
         </div>
     </div>
+    <a id="tttt"></a>
 </body>
 
 </html>
